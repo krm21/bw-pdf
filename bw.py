@@ -1,25 +1,27 @@
+import os
 import numpy as np
 from PIL import Image
-from PIL import ImageFilter
 from imageio import imwrite
-from scipy import ndimage
 
-urlimg = 'Kopia 7_2'
+FILTER_SIZE = 40
 
-i = Image.open(urlimg + '.jpg')
-i = i.convert("L")
-# i = i.filter(ImageFilter.SHARPEN)
-# i = i.filter(ImageFilter.GaussianBlur(radius=1))
-# i = i.filter(ImageFilter.MinFilter(size=3))
+def get_pic_list():
+	extension_set = {".jpg", ".jpeg", ".png"}
+	all_files = os.listdir()
+	all_pics = []
+	
+	for file in all_files:
+		if os.path.splitext(file)[1].lower() in extension_set:
+			all_pics.append(file)
 
-i = np.array(i)
+	return all_pics
 
 
-def _purify_piece(lx, ly, img):
+def filter(lx, ly, img):
 	x0 = lx
 	y0 = ly
-	xend = x0+40
-	yend = y0+40	
+	xend = x0 + FILTER_SIZE
+	yend = y0 + FILTER_SIZE	
 
 	sub = img[x0:xend,y0:yend]
 	mm = sub.mean()*1.1
@@ -29,17 +31,31 @@ def _purify_piece(lx, ly, img):
 	return img
 
 
-def purify(img):
+def iterate_filter(img):
 	width = img.shape[1]
 	height = img.shape[0]
-	print(width)
-	print(height)
 
-	for k in range(0, height, 40):
-		for l in range(0, width, 40):
-			_purify_piece(k, l, i)
+	for k in range(0, height, FILTER_SIZE):
+		for l in range(0, width, FILTER_SIZE):
+			filter(k, l, img)
 
 
-purify(i)
+def process_image(img_filename):
+	color_img = Image.open(img_filename)
+	gray_img = color_img.convert("L")
+	nparray_img = np.array(gray_img)
 
-imwrite(urlimg+"out.jpg", i)
+	iterate_filter(nparray_img)
+
+	imwrite(os.path.splitext(img_filename)[0]+"_out.jpg", nparray_img)
+
+
+def process_all_images():
+	all_pics = get_pic_list()
+	for picname in all_pics:
+		if not os.path.splitext(picname)[0].endswith("_out"):
+			process_image(picname)
+
+
+if __name__ == "__main__":
+	process_all_images()

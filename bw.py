@@ -6,7 +6,7 @@ from imageio import imwrite
 FILTER_SIZE = 40
 
 def get_pic_list():
-	extension_set = {".jpg", ".jpeg", ".png"}
+	extension_set = {".jpg", ".jpeg", ".png", ".jfif"}
 	all_files = os.listdir()
 	all_pics = []
 	
@@ -56,6 +56,16 @@ def process_all_images():
 		if not os.path.splitext(picname)[0].endswith("_out"):
 			process_image(picname)
 
+def generate_pdf():
+	all_files = os.listdir()
+	bw_pics = []
+
+	for file in all_files:
+		if file.endswith("_out.jpg"):
+			bw_pics.append(Image.open(file))
+
+	bw_pics[0].save(f'out.pdf', save_all=True, append_images=bw_pics[1:])
 
 if __name__ == "__main__":
 	process_all_images()
+	generate_pdf()
